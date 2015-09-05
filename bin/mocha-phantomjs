@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-var program = require('commander'),
-      spawn = require('child_process').spawn,
-         fs = require('fs'),
-       path = require('path'),
-     exists = fs.existsSync || path.existsSync,
- fileExists = function (path) {
-                return fs.existsSync(path) && !fs.statSync(path).isDirectory();
-              },
-        cwd = process.cwd(),
-    cookies = [],
-    headers = {},
-   settings = {};
+var program = require('commander');
+var spawn = require('child_process').spawn;
+var fs = require('fs');
+var path = require('path');
+var exists = fs.existsSync || path.existsSync;
+var fileExists = function(path) {
+  return fs.existsSync(path) && !fs.statSync(path).isDirectory();
+};
+var cwd = process.cwd();
+var cookies = [];
+var headers = {};
+var settings = {};
 
 function keyValue(val, store) {
   val = val.split('=');
@@ -41,7 +41,7 @@ function viewport(val) {
   val = val.split('x');
   return {
     width: parseFloat(val[0]),
-    height: parseFloat(val[1])
+    height: parseFloat(val[1]),
   };
 }
 function resolveHooks(val) {
@@ -50,8 +50,10 @@ function resolveHooks(val) {
   if (!exists(absPath)) {
     for (var i = 0; i < module.paths.length - 1; i++) {
       absPath = path.join(module.paths[i], val);
-      if (exists(absPath)) return absPath;
-    };
+      if (exists(absPath)) {
+        return absPath;
+      }
+    }
   }
 
   return absPath;
@@ -60,23 +62,23 @@ function resolveHooks(val) {
 program
   .version(JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf8')).version)
   .usage('[options] page')
-  .option('-R, --reporter <name>',       'specify the reporter to use', 'spec')
-  .option('-f, --file <filename>',       'specify the file to dump reporter output')
-  .option('-t, --timeout <timeout>',     'specify the test startup timeout to use', parseInt, 6000)
-  .option('-g, --grep <pattern>',        'only run tests matching <pattern>')
-  .option('-i, --invert',                'invert --grep matches')
-  .option('-b, --bail',                  'exit on the first test failure')
-  .option('-A, --agent <userAgent>',     'specify the user agent to use')
-  .option('-c, --cookies <Object>',      'phantomjs cookie object http://git.io/RmPxgA', cookiesParser) // http://git.io/RmPxgA
+  .option('-R, --reporter <name>', 'specify the reporter to use', 'spec')
+  .option('-f, --file <filename>', 'specify the file to dump reporter output')
+  .option('-t, --timeout <timeout>', 'specify the test startup timeout to use', parseInt, 6000)
+  .option('-g, --grep <pattern>', 'only run tests matching <pattern>')
+  .option('-i, --invert', 'invert --grep matches')
+  .option('-b, --bail', 'exit on the first test failure')
+  .option('-A, --agent <userAgent>', 'specify the user agent to use')
+  .option('-c, --cookies <Object>', 'phantomjs cookie object http://git.io/RmPxgA', cookiesParser) // http://git.io/RmPxgA
   .option('-h, --header <name>=<value>', 'specify custom header', header)
-  .option('-k, --hooks <path>',          'path to hooks module', resolveHooks)
+  .option('-k, --hooks <path>', 'path to hooks module', resolveHooks)
   .option('-s, --setting <key>=<value>', 'specify specific phantom settings', setting)
   .option('-v, --view <width>x<height>', 'specify phantom viewport size', viewport)
-  .option('-C, --no-color',              'disable color escape codes')
-  .option('-p, --path <path>',           'path to PhantomJS binary')
-  .option('--ignore-resource-errors',    'ignore resource errors');
-  
-program.on('--help', function(){
+  .option('-C, --no-color', 'disable color escape codes')
+  .option('-p, --path <path>', 'path to PhantomJS binary')
+  .option('--ignore-resource-errors', 'ignore resource errors');
+
+program.on('--help', function() {
   console.log('  Examples:');
   console.log('');
   console.log('    $ mocha-phantomjs -R dot /test/file.html');
@@ -87,18 +89,32 @@ program.on('--help', function(){
 
 program.parse(process.argv);
 
-if (!program.args.length) { program.outputHelp(); process.exit(1); };
-if (program.agent) { settings.userAgent = program.agent; }
+if (!program.args.length) {
+  program.outputHelp(); process.exit(1);
+}
+if (program.agent) {
+  settings.userAgent = program.agent;
+}
 
-var script   = fs.realpathSync(__dirname + '/../lib/mocha-phantomjs.coffee');
+var script = fs.realpathSync(__dirname + '/../lib/mocha-phantomjs.js');
 var reporter = program.reporter;
-var page     = function(){
+var page = function() {
   var arg = program.args[0];
-  if (arg.match(/file:\/\//))   { return arg; };
-  if (arg.match(/http:\/\//))   { return arg; };
-  if (arg.match(/https:\/\//))  { return arg; };
-  if (exists(arg))              { return arg; };
-  if (exists(cwd+'/'+arg))      { return fs.realpathSync(cwd+'/'+arg); };
+  if (arg.match(/file:\/\//)) {
+    return arg;
+  }
+  if (arg.match(/http:\/\//)) {
+    return arg;
+  }
+  if (arg.match(/https:\/\//)) {
+    return arg;
+  }
+  if (exists(arg)) {
+    return arg;
+  }
+  if (exists(cwd + '/' + arg)) {
+    return fs.realpathSync(cwd + '/' + arg);
+  }
   return arg;
 }();
 var config = JSON.stringify({
@@ -113,12 +129,12 @@ var config = JSON.stringify({
   file: program.file,
   grep: program.grep,
   invert: program.invert,
-  ignoreResourceErrors: program.ignoreResourceErrors
+  ignoreResourceErrors: program.ignoreResourceErrors,
 });
 
 if (program.reporter === 'xunit' && program.file) {
-  console.error('The xunit reporter does not work with the --file option. Pipe it to a file instead. See #114.')
-  process.exit(-3)
+  console.error('The xunit reporter does not work with the --file option. Pipe it to a file instead. See #114.');
+  process.exit(-3);
 }
 
 if (reporter) {
@@ -129,7 +145,7 @@ if (reporter) {
   }
 }
 
-var phantomPath
+var phantomPath;
 if (program.path) {
   phantomPath = path.resolve(program.path);
   if (!exists(phantomPath)) {
@@ -152,7 +168,7 @@ try {
   var phantomjs = spawn(phantomPath, [script, page, reporter, config]);
   phantomjs.stdout.pipe(process.stdout);
   phantomjs.stderr.pipe(process.stderr);
-  phantomjs.on('exit', function(code){
+  phantomjs.on('exit', function(code) {
     if (code == null) {
       if (phantomjs.signalCode !== null) {
         console.log("phantomjs terminated with signal " + phantomjs.signalCode);
@@ -165,7 +181,6 @@ try {
     process.exit(code);
   });
   phantomjs.on('error', launchFailure);
-}
-catch (e) {
+} catch (e) {
   launchFailure(e);
 }
